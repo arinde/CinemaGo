@@ -1,14 +1,103 @@
-import { StyleSheet } from 'react-native';
+import { useCallback } from 'react';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  RefreshControl,
+  Alert,
+  ListRenderItem,
+} from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useMovies } from '@/hooks/useMovies';
+import { useWatchlist } from '@/hooks/useWatchlist';
+import MovieCard from '@/components/UI/MovieCard';
+import SearchBar from '@/components/UI/SearchBar';
+import LoadingSpinner from '@/components/UI/LoadingSpinner';
+import EmptyState from '@/components/UI/EmptyState';
+import { Movie } from '@/types/movieTypes';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function BrowseScreen() {
+  const { movies, loading, error, searchMovies, refreshMovies } = useMovies();
+  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
 
-export default function HomeScreen() {
+  const handleToggleWatchlist = useCallback(async (movie: Movie) => {
+    try {
+      if (isInWatchlist(movie.imdbID)) {
+        await removeFromWatchlist(movie.imdbID);
+      } else {
+        await addToWatchlist(movie);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update watchlist. Please try again.');
+    }
+  }, [isInWatchlist, addToWatchlist, removeFromWatchlist]);
+
+  const renderMovie: ListRenderItem<Movie> = useCallback(({ item }) => (
+    <MovieCard
+      movie={item}
+      isInWatchlist={isInWatchlist(item.imdbID)}
+      onToggleWatchlist={handleToggleWatchlist}
+    />
+  ), [isInWatchlist, handleToggleWatchlist]);
+
+  const keyExtractor = useCallback((item: Movie) => item.imdbID, []);
+
+  const ListHeaderComponent = useCallback(() => (
+    <SearchBar onSearch={searchMovies} />
+  ), [searchMovies]);
+
+  const ListEmptyComponent = useCallback(() => {
+    if (loading) {
+      return <LoadingSpinner />;
+    }
+
+    if (error) {
+      return (
+        <EmptyState
+          icon="alert-circle-outline"
+          title="No Results"
+          message={error}
+        />
+      );
+    }
+
+    return (
+      <EmptyState
+        icon="film-outline"
+        title="No Movies Found"
+        message="Try searching for a different movie title"
+      />
+    );
+  }, [loading, error]);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Home Screen</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+      <StatusBar style="light" />
+      
+      <FlatList
+        data={movies}
+        renderItem={renderMovie}
+        keyExtractor={keyExtractor}
+        ListHeaderComponent={ListHeaderComponent}
+        ListEmptyComponent={ListEmptyComponent}
+        contentContainerStyle={[
+          styles.listContent,
+          movies.length === 0 && styles.emptyListContent,
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={refreshMovies}
+            tintColor="#3b82f6"
+            colors={['#3b82f6']}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={true}
+      />
     </View>
   );
 }
@@ -16,16 +105,12 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#f9fafb',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  listContent: {
+    padding: 16,
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  emptyListContent: {
+    flexGrow: 1,
   },
 });
