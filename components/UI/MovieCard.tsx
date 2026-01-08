@@ -1,5 +1,6 @@
 import { memo, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Movie } from '@/types/movieTypes';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,7 +17,7 @@ const MovieCard = memo<MovieCardProps>(({ movie, isInWatchlist, onToggleWatchlis
 
   const posterSource = movie.Poster !== 'N/A' 
     ? { uri: movie.Poster }
-    : { uri: 'https://via.placeholder.com/300x450/e5e7eb/9ca3af?text=No+Poster' };
+    : { uri: 'https://via.placeholder.com/300x450/1f2937/9ca3af?text=No+Poster' };
 
   return (
     <View style={styles.container}>
@@ -26,28 +27,37 @@ const MovieCard = memo<MovieCardProps>(({ movie, isInWatchlist, onToggleWatchlis
         resizeMode="cover"
       />
       
-      <View style={styles.info}>
-        <Text style={styles.title} numberOfLines={2}>
-          {movie.Title}
-        </Text>
-        <Text style={styles.year}>{movie.Year}</Text>
-        <View style={styles.typeContainer}>
-          <Text style={styles.type}>{movie.Type}</Text>
-        </View>
-      </View>
+      <View style={styles.overlay}>
+        <BlurView intensity={40} tint="light" style={styles.glassContainer}>
+          <View style={styles.info}>
+            <Text style={styles.title} numberOfLines={2}>
+              {movie.Title}
+            </Text>
+            
+            <View style={styles.metadata}>
+              <View style={styles.yearBadge}>
+                <Text style={styles.year}>{movie.Year}</Text>
+              </View>
+              <View style={styles.typeBadge}>
+                <Text style={styles.type}>{movie.Type}</Text>
+              </View>
+            </View>
+          </View>
 
-      <TouchableOpacity
-        style={styles.heartButton}
-        onPress={handlePress}
-        activeOpacity={0.7}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <Ionicons
-          name={isInWatchlist ? 'heart' : 'heart-outline'}
-          size={28}
-          color={isInWatchlist ? '#ef4444' : '#9ca3af'}
-        />
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.heartButton}
+            onPress={handlePress}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={isInWatchlist ? 'heart' : 'heart-outline'}
+              size={24}
+              color={isInWatchlist ? '#ef4444' : '#ffffff'}
+            />
+          </TouchableOpacity>
+        </BlurView>
+      </View>
     </View>
   );
 });
@@ -56,63 +66,96 @@ MovieCard.displayName = 'MovieCard';
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+    height: 220,
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 3,
+        elevation: 6,
       },
     }),
   },
   poster: {
-    width: 80,
-    height: 120,
-    borderRadius: 8,
-    backgroundColor: '#e5e7eb',
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#1f2937',
+  },
+  overlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  glassContainer: {
+    overflow: 'hidden',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   info: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'center',
+    padding: 14,
+    paddingRight: 60,
   },
   title: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 8,
     lineHeight: 22,
   },
-  year: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 6,
+  metadata: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  typeContainer: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f3f4f6',
+  yearBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  year: {
+    fontSize: 12,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  typeBadge: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
   },
   type: {
-    fontSize: 12,
-    color: '#374151',
+    fontSize: 11,
+    color: '#ffffff',
     textTransform: 'capitalize',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   heartButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
 });
 

@@ -2,12 +2,37 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Movie } from '@/types/movieTypes';
 import { api } from '@/services/api';
 
-export const useMovies = (initialQuery: string = 'Marvel') => {
+const SEARCH_TERMS = [
+  'Avengers', 'Batman', 'Superman', 'Spider-Man', 'Iron Man',
+  'Thor', 'Captain America', 'Black Panther', 'Wonder Woman',
+  'Justice League', 'X-Men', 'Deadpool', 'Guardians',
+  'Star Wars', 'Star Trek', 'Lord of the Rings', 'Harry Potter',
+  'Matrix', 'Jurassic', 'Terminator', 'Alien', 'Predator',
+  'James Bond', 'Mission Impossible', 'Fast Furious', 'John Wick',
+  'Bourne', 'Die Hard', 'Mad Max', 'Rambo', 'Rocky',
+  'Toy Story', 'Shrek', 'Frozen', 'Minions', 'Despicable',
+  'Finding', 'Incredibles', 'Cars', 'Up', 'Wall-E',
+  'Halloween', 'Friday', 'Nightmare', 'Scream', 'Saw',
+  'Conjuring', 'Insidious', 'Paranormal', 'Ring',
+  'Hangover', 'Anchorman', 'Step Brothers', 'Bridesmaids',
+  'Superbad', 'Dumb', 'Ace Ventura', 'Austin Powers',
+  'Titanic', 'Notebook', 'Love Actually', 'Before Sunrise',
+  'Godfather', 'Goodfellas', 'Scarface', 'Casino',
+  'Blade Runner', 'Inception', 'Interstellar', 'Avatar',
+  'Back to the Future', 'Men in Black', 'Independence',
+  'Pirates', 'Twilight', 'Hunger Games', 'Divergent',
+  'Maze Runner', 'Transformers', 'Godzilla', 'King Kong'
+];
+
+export const useMovies = (initialQuery: string = 'Batman') => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState<string>(initialQuery);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  
+  const usedQueries = useRef<Set<string>>(new Set());
+  const abortController = useRef<AbortController | null>(null);
+  const isMounted = useRef(false);
 
   const fetchMovies = useCallback(async (searchQuery: string, signal?: AbortSignal) => {
     if (!searchQuery.trim()) {
@@ -21,27 +46,21 @@ export const useMovies = (initialQuery: string = 'Marvel') => {
     try {
       const response = await api.searchMovies(searchQuery, signal);
 
-      // Check if request was aborted
-      if (signal?.aborted) {
-        return;
-      }
+      if (signal?.aborted) return;
 
       if (response.Response === 'True' && response.Search) {
         setMovies(response.Search);
+        setQuery(searchQuery);
         setError(null);
       } else {
         setMovies([]);
         setError(response.Error || 'No movies found');
       }
     } catch (err) {
-      // Ignore abort errors
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
+      if (err instanceof Error && err.name === 'AbortError') return;
       
       setMovies([]);
       setError('Failed to fetch movies. Please check your connection.');
-      console.error('Error fetching movies:', err);
     } finally {
       if (!signal?.aborted) {
         setLoading(false);
@@ -50,42 +69,54 @@ export const useMovies = (initialQuery: string = 'Marvel') => {
   }, []);
 
   const searchMovies = useCallback((searchQuery: string) => {
-    // Cancel previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    if (abortController.current) {
+      abortController.current.abort();
     }
 
-    // Create new abort controller
-    abortControllerRef.current = new AbortController();
-    
-    setQuery(searchQuery);
-    fetchMovies(searchQuery, abortControllerRef.current.signal);
+    abortController.current = new AbortController();
+    fetchMovies(searchQuery, abortController.current.signal);
   }, [fetchMovies]);
 
   const refreshMovies = useCallback(() => {
-    // Cancel previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    if (abortController.current) {
+      abortController.current.abort();
     }
 
-    // Create new abort controller
-    abortControllerRef.current = new AbortController();
+    abortController.current = new AbortController();
     
-    fetchMovies(query, abortControllerRef.current.signal);
-  }, [fetchMovies, query]);
+    // reset if we've used most terms
+    if (usedQueries.current.size >= SEARCH_TERMS.length * 0.8) {
+      usedQueries.current.clear();
+    }
+
+    // get unused term
+    const unused = SEARCH_TERMS.filter(term => !usedQueries.current.has(term));
+    const available = unused.length > 0 ? unused : SEARCH_TERMS;
+    const randomTerm = available[Math.floor(Math.random() * available.length)];
+    
+    usedQueries.current.add(randomTerm);
+    
+    fetchMovies(randomTerm, abortController.current.signal);
+  }, [fetchMovies]);
 
   useEffect(() => {
-    // Initial fetch
-    abortControllerRef.current = new AbortController();
-    fetchMovies(query, abortControllerRef.current.signal);
+    if (isMounted.current) return;
+    isMounted.current = true;
 
-    // Cleanup
+    // pick random starting term
+    const randomIndex = Math.floor(Math.random() * SEARCH_TERMS.length);
+    const startTerm = SEARCH_TERMS[randomIndex];
+    usedQueries.current.add(startTerm);
+    
+    abortController.current = new AbortController();
+    fetchMovies(startTerm, abortController.current.signal);
+
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      if (abortController.current) {
+        abortController.current.abort();
       }
     };
-  }, []); // Only run on mount
+  }, [fetchMovies]);
 
   return {
     movies,
@@ -93,6 +124,6 @@ export const useMovies = (initialQuery: string = 'Marvel') => {
     error,
     searchMovies,
     refreshMovies,
-    query
+    query,
   };
 };

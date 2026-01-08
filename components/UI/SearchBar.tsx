@@ -17,25 +17,21 @@ const SearchBar = ({
   const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Clear any pending timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    // Don't search for empty or very short queries
     if (query.trim().length < 3) {
       if (query.trim().length === 0) {
-        onSearch('Marvel'); // Reset to default
+        onSearch('Marvel'); 
       }
       return;
     }
 
-    // Debounce the search
     timeoutRef.current = setTimeout(() => {
       onSearch(query.trim());
     }, debounceMs);
 
-    // Cleanup
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -45,7 +41,7 @@ const SearchBar = ({
 
   const handleClear = useCallback(() => {
     setQuery('');
-    onSearch('Marvel'); // Reset to default
+    onSearch('Marvel');
   }, [onSearch]);
 
   return (

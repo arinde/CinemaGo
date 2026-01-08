@@ -1,15 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Movie } from '@/types/movieTypes';
 
-/**
- * Storage key for watchlist data
- * Using @ prefix following AsyncStorage naming conventions
- */
 const WATCHLIST_KEY = '@cinemago_watchlist';
-
-/**
- * Storage version for migration compatibility
- */
 const STORAGE_VERSION = '1.0';
 const VERSION_KEY = '@cinemago_version';
 

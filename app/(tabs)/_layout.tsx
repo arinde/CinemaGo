@@ -6,27 +6,31 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#3b82f6',
-        tabBarInactiveTintColor: '#9ca3af',
+        tabBarActiveTintColor: '#ef4444',
+        tabBarInactiveTintColor: '#6b7280',
         tabBarStyle: {
-          backgroundColor: '#ffffff',
+          backgroundColor: '#111827',
           borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
-          height: Platform.OS === 'ios' ? 88 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-          paddingTop: 8,
+          borderTopColor: '#1f2937',
+          height: Platform.OS === 'ios' ? 88 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+          paddingTop: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
         },
         headerStyle: {
-          backgroundColor: '#3b82f6',
+          backgroundColor: '#111827',
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: '#1f2937',
         },
         headerTintColor: '#ffffff',
         headerTitleStyle: {
-          fontWeight: '600',
-          fontSize: 18,
+          fontWeight: '700',
+          fontSize: 24,
         },
         headerShadowVisible: false,
       }}
@@ -34,12 +38,12 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Browse Movies',
-          tabBarLabel: 'Browse',
+          title: 'CinemaGo',
+          tabBarLabel: 'Discover',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
-              name={focused ? 'search' : 'search-outline'} 
-              size={size} 
+              name={focused ? 'film' : 'film-outline'} 
+              size={size + 2} 
               color={color} 
             />
           ),
@@ -52,8 +56,8 @@ export default function TabLayout() {
           tabBarLabel: 'Watchlist',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
-              name={focused ? 'heart' : 'heart-outline'} 
-              size={size} 
+              name={focused ? 'bookmark' : 'bookmark-outline'} 
+              size={size + 2} 
               color={color} 
             />
           ),

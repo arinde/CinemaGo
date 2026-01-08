@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -9,6 +9,7 @@ import {
   ListRenderItem,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useFocusEffect } from '@react-navigation/native';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import MovieCard from '@/components/UI/MovieCard';
 import LoadingSpinner from '@/components/UI/LoadingSpinner';
@@ -21,8 +22,16 @@ export default function WatchlistScreen() {
     loading, 
     isInWatchlist, 
     removeFromWatchlist,
-    clearWatchlist 
+    clearWatchlist,
+    refreshWatchlist
   } = useWatchlist();
+
+  // Refresh watchlist when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refreshWatchlist();
+    }, [refreshWatchlist])
+  );
 
   const handleRemoveFromWatchlist = useCallback(async (movie: Movie) => {
     try {
@@ -94,9 +103,9 @@ export default function WatchlistScreen() {
 
     return (
       <EmptyState
-        icon="heart-outline"
+        icon="bookmark-outline"
         title="No Movies Saved"
-        message="Start adding movies to your watchlist from the Browse tab"
+        message="Start adding movies to your watchlist from the Discover tab"
       />
     );
   }, [loading]);
@@ -127,7 +136,7 @@ export default function WatchlistScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#111827',
   },
   header: {
     flexDirection: 'row',
@@ -140,12 +149,15 @@ const styles = StyleSheet.create({
   count: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
+    color: '#f3f4f6',
   },
   clearButton: {
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
+    backgroundColor: '#1f2937',
+    borderWidth: 1,
+    borderColor: '#374151',
   },
   clearText: {
     fontSize: 14,
