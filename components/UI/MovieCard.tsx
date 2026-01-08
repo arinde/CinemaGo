@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { memo, useCallback } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Movie } from '@/types/movieTypes';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,10 +9,14 @@ interface MovieCardProps {
   onToggleWatchlist: (movie: Movie) => void;
 }
 
-const MovieCard: React.FC<MovieCardProps> = memo(({ movie, isInWatchlist, onToggleWatchlist }) => {
+const MovieCard = memo<MovieCardProps>(({ movie, isInWatchlist, onToggleWatchlist }) => {
+  const handlePress = useCallback(() => {
+    onToggleWatchlist(movie);
+  }, [movie, onToggleWatchlist]);
+
   const posterSource = movie.Poster !== 'N/A' 
     ? { uri: movie.Poster }
-    : require('@/assets/images/placeholder.png');
+    : { uri: 'https://via.placeholder.com/300x450/e5e7eb/9ca3af?text=No+Poster' };
 
   return (
     <View style={styles.container}>
@@ -27,13 +31,16 @@ const MovieCard: React.FC<MovieCardProps> = memo(({ movie, isInWatchlist, onTogg
           {movie.Title}
         </Text>
         <Text style={styles.year}>{movie.Year}</Text>
-        <Text style={styles.type}>{movie.Type}</Text>
+        <View style={styles.typeContainer}>
+          <Text style={styles.type}>{movie.Type}</Text>
+        </View>
       </View>
 
       <TouchableOpacity
         style={styles.heartButton}
-        onPress={() => onToggleWatchlist(movie)}
+        onPress={handlePress}
         activeOpacity={0.7}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
         <Ionicons
           name={isInWatchlist ? 'heart' : 'heart-outline'}
@@ -50,15 +57,21 @@ MovieCard.displayName = 'MovieCard';
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   poster: {
     width: 80,
@@ -76,16 +89,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
     marginBottom: 4,
+    lineHeight: 22,
   },
   year: {
     fontSize: 14,
     color: '#6b7280',
-    marginBottom: 2,
+    marginBottom: 6,
+  },
+  typeContainer: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   type: {
     fontSize: 12,
-    color: '#9ca3af',
+    color: '#374151',
     textTransform: 'capitalize',
+    fontWeight: '500',
   },
   heartButton: {
     justifyContent: 'center',
