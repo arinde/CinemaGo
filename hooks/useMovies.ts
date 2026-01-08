@@ -84,7 +84,7 @@ export const useMovies = (initialQuery: string = 'Batman') => {
 
     abortController.current = new AbortController();
     
-    // reset if we've used most terms
+    
     if (usedQueries.current.size >= SEARCH_TERMS.length * 0.8) {
       usedQueries.current.clear();
     }

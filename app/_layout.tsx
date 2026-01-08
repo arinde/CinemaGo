@@ -9,7 +9,6 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    // Add custom fonts here if needed
   });
 
   useEffect(() => {
